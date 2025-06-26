@@ -6,15 +6,26 @@ class Player {
      * @param {THREE.Texture} texture - Textura para el material del jugador
      */
     constructor(scene, texture) {
+        // Material cartoon/realista con reflejos y brillo
+        const material = new THREE.MeshPhongMaterial({
+            map: texture, // Textura de la nave
+            color: 0xffffff, // Color base
+            shininess: 100, // Brillo
+            specular: 0x222222 // Reflejo especular
+        });
         this.mesh = new THREE.Mesh(
             new THREE.BoxGeometry(0.5, 0.5, 0.5), // Cubo como base del jugador
-            new THREE.MeshBasicMaterial({ 
-                map: texture, // Textura del jugador
-                color: 0x00ff00 // Color de respaldo si no hay textura
-            })
+            material
         );
         this.mesh.position.y = -2; // Posición inicial del jugador
         scene.add(this.mesh); // Agrega el jugador a la escena
+        // Luz para resaltar el material Phong
+        if (!scene.getObjectByName('playerLight')) {
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(0, 0, 5);
+            light.name = 'playerLight';
+            scene.add(light);
+        }
     }
 
     /**

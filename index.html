@@ -7,7 +7,50 @@
     <style>
         body { margin: 0; overflow: hidden; }
         #score { position: absolute; top: 20px; left: 20px; color: white; font-family: Arial; font-size: 24px; }
+
+        .cubierta-emergente{
+            position: fixed;
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            opacity: 0.85;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .mensaje-emergente{
+            position: fixed;
+            background: linear-gradient(135deg, #105ce1 60%, #00c3ff 100%);
+            color: #fff;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 24px;
+            border: 2px solid #fff;
+            padding: 30px 20px;
+            width: 340px;
+            height: 220px;
+            font-size: 2em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: center;
+            z-index: 11;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: box-shadow 0.2s, background 0.2s;
+        }
+        .mensaje-emergente:hover {
+            background: linear-gradient(135deg, #00c3ff 0%, #105ce1 100%);
+            box-shadow: 0 12px 40px 0 rgba(16, 92, 225, 0.45);
+        }
     </style>
+    
 </head>
 <body>
     <div id="score">puntuacion: 0</div>
@@ -15,5 +58,43 @@
     <script src="./src/core/ObstacleManager.js"></script>
     <script src="./src/utils/controls.js"></script>
     <script src="./src/main.js"></script>
+
+    <script>
+        // Variable global para controlar el inicio del juego
+        window.juegoIniciado = false;
+
+        function mostrarCubiertaEmergente(){
+            let divEmergente = document.createElement("div");
+            divEmergente.setAttribute('id', 'divEemergente');
+            divEmergente.setAttribute('class','cubierta-emergente');
+            divEmergente.style.position = 'fixed';
+            divEmergente.style.top = '0';
+            divEmergente.style.left = '0';
+            document.body.appendChild(divEmergente);
+
+            let divMensaje = document.createElement('div');
+            let textoDivMensaje = document.createTextNode("Jugar");
+            divMensaje.appendChild(textoDivMensaje);
+            divMensaje.setAttribute('id', 'divMensaje');
+            divMensaje.setAttribute('class', 'mensaje-emergente');
+            divMensaje.style.transform = 'translate(-50%, -50%)';
+            divMensaje.onclick = function() {
+                removerCubiertaEmergente();
+                window.juegoIniciado = true;
+                if (window.iniciarJuego) window.iniciarJuego();
+            };
+            document.body.appendChild(divMensaje); 
+        }
+        function removerCubiertaEmergente(){
+            document.body.removeChild(document.getElementById('divEemergente'));
+            document.body.removeChild(document.getElementById('divMensaje'));
+        }
+
+        window.onload = function() {
+            mostrarCubiertaEmergente();
+        };
+
+    </script>
+    
 </body>
 </html>

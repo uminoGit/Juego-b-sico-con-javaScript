@@ -37,35 +37,38 @@ function updateScore() {
 const playerTexture = textureLoader.load(
     '../../assets/textures/nave.jpeg', // Ruta de la textura del jugador
     () => {
-        player = new Player(scene, playerTexture); // Crear jugador
-        player.mesh.scale.set(1.5, 1.5, 1.5); // Hacer el jugador más grande
-        obstacleManager = new ObstacleManager(scene); // Crear gestor de obstáculos
-        controls = initControls(); // Inicializar controles de teclado
-        score = 0;
-        gameOver = false;
-        frameCount = 0;
-        updateScore();
-        
-        // 6. Bucle principal del juego
-        function gameLoop() {
-            if (gameOver) return; // Si el juego terminó, no seguir
-            requestAnimationFrame(gameLoop); // Llamar de nuevo al siguiente frame
-            player.update(controls); // Actualizar posición del jugador
-            obstacleManager.update(); // Actualizar obstáculos
-            renderer.render(scene, camera); // Dibujar la escena
-            // Sumar puntos cada 10 frames (más lento)
-            frameCount++;
-            if (frameCount % 10 === 0) {
-                score++;
-                updateScore();
+        // Solo define la función para iniciar el juego, no la ejecutes automáticamente
+        window.iniciarJuego = function() {
+            player = new Player(scene, playerTexture); // Crear jugador
+            player.mesh.scale.set(1.5, 1.5, 1.5); // Hacer el jugador más grande
+            obstacleManager = new ObstacleManager(scene); // Crear gestor de obstáculos
+            controls = initControls(); // Inicializar controles de teclado
+            score = 0;
+            gameOver = false;
+            frameCount = 0;
+            updateScore();
+            // 6. Bucle principal del juego
+            function gameLoop() {
+                if (gameOver) return; // Si el juego terminó, no seguir
+                requestAnimationFrame(gameLoop); // Llamar de nuevo al siguiente frame
+                player.update(controls); // Actualizar posición del jugador
+                obstacleManager.update(); // Actualizar obstáculos
+                renderer.render(scene, camera); // Dibujar la escena
+                // Sumar puntos cada 10 frames (más lento)
+                frameCount++;
+                if (frameCount % 10 === 0) {
+                    score++;
+                    updateScore();
+                }
+                // Colisión
+                if (checkCollision(player, obstacleManager.obstacles)) {
+                    gameOver = true;
+                    document.getElementById('score').textContent = '¡Game Over! Puntuación: ' + score;
+                }
             }
-            // Colisión
-            if (checkCollision(player, obstacleManager.obstacles)) {
-                gameOver = true;
-                document.getElementById('score').textContent = '¡Game Over! Puntuación: ' + score;
-            }
+            gameLoop(); // Iniciar el bucle
         }
-        gameLoop(); // Iniciar el bucle
+        // NO LLAMAR window.iniciarJuego() aquí
     },
     undefined,
     (err) => console.error("Error cargando textura:", err) // Manejo de error de carga
