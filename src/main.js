@@ -7,6 +7,34 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// --- Animación de estrellas de fondo ---
+let stars = [];
+function createStars(scene, numStars = 120) {
+    for (let i = 0; i < numStars; i++) {
+        const geometry = new THREE.SphereGeometry(0.03 + Math.random() * 0.04, 6, 6);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: Math.random() * 0.7 + 0.3 });
+        const star = new THREE.Mesh(geometry, material);
+        // Distribuye las estrellas en un área más grande (más allá del área de juego)
+        star.position.set(
+            Math.random() * 16 - 8, // X entre -8 y 8
+            Math.random() * 12 - 6, // Y entre -6 y 6
+            -2 - Math.random() * 4 // Z entre -2 y -6
+        );
+        scene.add(star);
+        stars.push(star);
+    }
+}
+
+function updateStars() {
+    for (let star of stars) {
+        star.position.y -= 0.01 + Math.random() * 0.01;
+        if (star.position.y < -7) {
+            star.position.y = 7;
+            star.position.x = Math.random() * 16 - 8;
+        }
+    }
+}
+
 // 2. Variables globales del juego
 const textureLoader = new THREE.TextureLoader(); // Cargador de texturas
 let player, obstacleManager, controls; // Instancias principales del juego
@@ -18,6 +46,55 @@ let obstaclesSpeed = 0.05; // Velocidad inicial de los obstáculos
 let obstaclesInterval = 2000; // Intervalo inicial de aparición (ms)
 let lives = 5; // Vidas del jugador
 let invulnerable = false; // Estado de invulnerabilidad tras colisión
+let paused = false; // Estado de pausa
+
+let blinkInterval = null; // Para controlar el parpadeo
+let blinkTimeout = null;
+
+// --- Bucle principal del juego (debe ser global para pausa/reanudar) ---
+function gameLoop() {
+    if (gameOver) return; // Si el juego terminó, no seguir
+    if (paused) return; // Si está pausado, no seguir
+    requestAnimationFrame(gameLoop); // Llamar de nuevo al siguiente frame
+    player.update(controls); // Actualizar posición del jugador
+    obstacleManager.update(); // Actualizar obstáculos
+    updateStars(); // Animar estrellas en cada frame
+    renderer.render(scene, camera); // Dibujar la escena
+    // Sumar puntos cada 10 frames (más lento)
+    frameCount++;
+    if (frameCount % 10 === 0) {
+        score++;
+        updateScore();
+        updateLevel();
+    }
+    // Colisión
+    if (!invulnerable && checkCollision(player, obstacleManager.obstacles)) {
+        lives--;
+        updateScore();
+        if (lives <= 0) {
+            gameOver = true;
+            showGameOver();
+        } else {
+            invulnerable = true;
+            blinkPlayer();
+        }
+    }
+}
+
+function blinkPlayer(duration = 1500) {
+    let blink = true;
+    if (blinkInterval) clearInterval(blinkInterval);
+    if (blinkTimeout) clearTimeout(blinkTimeout);
+    blinkInterval = setInterval(() => {
+        player.mesh.visible = blink;
+        blink = !blink;
+    }, 150);
+    blinkTimeout = setTimeout(() => {
+        clearInterval(blinkInterval);
+        player.mesh.visible = true;
+        invulnerable = false;
+    }, duration);
+}
 
 // 3. Función para detectar colisiones entre el jugador y los obstáculos
 function checkCollision(player, obstacles) {
@@ -36,7 +113,7 @@ function checkCollision(player, obstacles) {
 // Nueva función para actualizar el nivel
 function updateLevel() {
     // Sube de nivel cada 200 puntos
-    if (score > 0 && score % 50 === 0) {
+    if (score > 0 && score % 20 === 0) {
         level++;
         obstaclesSpeed += 0.015; // Obstáculos más rápidos
         obstaclesInterval = Math.max(600, obstaclesInterval - 200); // Menor intervalo, mínimo 600ms
@@ -76,48 +153,12 @@ const playerTexture = textureLoader.load(
             obstaclesInterval = 2000;
             lives = 5;
             invulnerable = false;
+            paused = false;
             updateScore();
+            // Crear estrellas de fondo
+            createStars(scene, 120); // Aumentar el número de estrellas
             if (obstacleManager && obstacleManager.setDifficulty) {
                 obstacleManager.setDifficulty(obstaclesSpeed, obstaclesInterval, level);
-            }
-            // 6. Bucle principal del juego
-            function gameLoop() {
-                if (gameOver) return; // Si el juego terminó, no seguir
-                requestAnimationFrame(gameLoop); // Llamar de nuevo al siguiente frame
-                player.update(controls); // Actualizar posición del jugador
-                obstacleManager.update(); // Actualizar obstáculos
-                renderer.render(scene, camera); // Dibujar la escena
-                // Sumar puntos cada 10 frames (más lento)
-                frameCount++;
-                if (frameCount % 10 === 0) {
-                    score++;
-                    updateScore();
-                    updateLevel();
-                }
-                // Colisión
-                if (!invulnerable && checkCollision(player, obstacleManager.obstacles)) {
-                    lives--;
-                    updateScore();
-                    if (lives <= 0) {
-                        gameOver = true;
-                        showGameOver();
-                    } else {
-                        invulnerable = true;
-                        blinkPlayer();
-                    }
-                }
-            }
-            function blinkPlayer(duration = 1500) {
-                let blink = true;
-                const interval = setInterval(() => {
-                    player.mesh.visible = blink;
-                    blink = !blink;
-                }, 150);
-                setTimeout(() => {
-                    clearInterval(interval);
-                    player.mesh.visible = true;
-                    invulnerable = false;
-                }, duration);
             }
             gameLoop(); // Iniciar el bucle
         }
@@ -166,3 +207,46 @@ function showGameOver() {
     divMensaje.appendChild(btn);
     document.body.appendChild(divMensaje);
 }
+
+function showPauseMenu() {
+    if (document.getElementById('divPause')) return; // Evita duplicados
+    let divEmergente = document.createElement("div");
+    divEmergente.setAttribute('id', 'divPause');
+    divEmergente.setAttribute('class','cubierta-emergente');
+    divEmergente.style.position = 'fixed';
+    divEmergente.style.top = '0';
+    divEmergente.style.left = '0';
+    document.body.appendChild(divEmergente);
+
+    let divMensaje = document.createElement('div');
+    divMensaje.setAttribute('class', 'mensaje-emergente');
+    divMensaje.style.transform = 'translate(-50%, -50%)';
+    divMensaje.innerHTML = `<div style="margin-bottom: 30px;">Juego en pausa</div>`;
+    let btn = document.createElement('button');
+    btn.textContent = 'Reanudar';
+    btn.style.fontSize = '1.2em';
+    btn.style.padding = '10px 30px';
+    btn.style.borderRadius = '12px';
+    btn.style.border = 'none';
+    btn.style.background = '#105ce1';
+    btn.style.color = '#fff';
+    btn.style.cursor = 'pointer';
+    btn.onclick = function() {
+        paused = false;
+        document.body.removeChild(divEmergente);
+        document.body.removeChild(divMensaje);
+        requestAnimationFrame(gameLoop); // Ahora gameLoop es global
+    };
+    divMensaje.appendChild(btn);
+    document.body.appendChild(divMensaje);
+}
+
+// Manejo de eventos de teclado
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' && !gameOver) {
+        if (!paused) {
+            paused = true;
+            showPauseMenu();
+        }
+    }
+});
