@@ -16,6 +16,12 @@ function initControls() {
         if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = false;
     });
     return keys; // Devuelve el objeto de controles
+
+    // En controls.js
+    document.addEventListener('mousemove', (e) => {
+  player.mesh.position.x = (e.clientX / window.innerWidth) * 6 - 3;
+});
+
 }
 
 // Expone la función initControls al ámbito global

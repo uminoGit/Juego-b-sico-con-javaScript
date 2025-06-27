@@ -7,15 +7,36 @@ class ObstacleManager {
     constructor(scene) {
         this.scene = scene;
         this.obstacles = [];
+        this.level = 1; // Inicializa el nivel
         setInterval(() => this.spawnObstacle(), 500); // Generar cada 0,5 segundos
+    }
+
+    /**
+     * Permite actualizar el nivel desde fuera
+     */
+    setLevel(level) {
+        this.level = level;
     }
 
     /**
      * Crea un nuevo obstáculo y lo agrega a la escena.
      */
     spawnObstacle() {
-        const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5); // Cubo rojo
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        let geometry, material;
+        // Cambia la forma y color según el nivel
+        if (this.level < 3) {
+            geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+            material = new THREE.MeshPhongMaterial({ color: 0xff0000, shininess: 30 });
+        } else if (this.level < 5) {
+            geometry = new THREE.SphereGeometry(0.35, 16, 16);
+            material = new THREE.MeshPhongMaterial({ color: 0xffa500, shininess: 80 });
+        } else if (this.level < 8) {
+            geometry = new THREE.ConeGeometry(0.3, 0.7, 16);
+            material = new THREE.MeshPhongMaterial({ color: 0x00ffcc, shininess: 120 });
+        } else {
+            geometry = new THREE.TorusGeometry(0.3, 0.13, 16, 32);
+            material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random(), shininess: 200 });
+        }
         const obstacle = new THREE.Mesh(geometry, material);
         obstacle.position.set(
             Math.random() * 6 - 3, // Posición X aleatoria entre -3 y 3
