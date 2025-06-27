@@ -160,6 +160,7 @@ const playerTexture = textureLoader.load(
             if (obstacleManager && obstacleManager.setDifficulty) {
                 obstacleManager.setDifficulty(obstaclesSpeed, obstaclesInterval, level);
             }
+            playMusic(); // Inicia la música al iniciar el juego
             gameLoop(); // Iniciar el bucle
         }
         // NO LLAMAR window.iniciarJuego() aquí
@@ -167,6 +168,54 @@ const playerTexture = textureLoader.load(
     undefined,
     (err) => console.error("Error cargando textura:", err) // Manejo de error de carga
 );
+
+// --- Música de fondo ---
+function ensureBackgroundMusic() {
+    let audio = document.getElementById('bg-music');
+    if (!audio) {
+        audio = document.createElement('audio');
+        audio.id = 'bg-music';
+        // Busca el primer archivo de música en assets/sounds
+        const musicFiles = [
+            'assets/sounds/583421__cyxnosa__fallen-down.mp3',
+            'assets/sounds/music.ogg',
+            'assets/sounds/music.wav'
+        ];
+        let found = false;
+        for (let src of musicFiles) {
+            const req = new XMLHttpRequest();
+            req.open('HEAD', src, false);
+            req.send();
+            if (req.status !== 404) {
+                audio.src = src;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            audio.src = 'assets/sounds/music.mp3'; // fallback
+        }
+        audio.loop = true;
+        audio.volume = 0.5;
+        audio.style.display = 'none';
+        document.body.appendChild(audio);
+    }
+    return audio;
+}
+
+function playMusic() {
+    const audio = ensureBackgroundMusic();
+    audio.play().catch(()=>{});
+}
+function pauseMusic() {
+    const audio = ensureBackgroundMusic();
+    audio.pause();
+}
+function stopMusic() {
+    const audio = ensureBackgroundMusic();
+    audio.pause();
+    audio.currentTime = 0;
+}
 
 // 7. Ajustar el renderizado cuando se cambia el tamaño de la ventana
 window.addEventListener('resize', () => {
@@ -261,6 +310,7 @@ function showPauseMenu() {
         pauseMenuOpen = false;
         document.body.removeChild(divEmergente);
         // divMensaje ya es hijo de divEmergente, se elimina junto con él
+        playMusic(); // Reanuda la música
         requestAnimationFrame(gameLoop); // Ahora gameLoop es global
     };
     divMensaje.appendChild(btn);
@@ -279,6 +329,7 @@ function showPauseMenu() {
     btnRestart.onmouseover = function() { btnRestart.style.background = '#ff4d4d'; };
     btnRestart.onmouseleave = function() { btnRestart.style.background = 'linear-gradient(90deg, #e11010 60%, #ff4d4d 100%)'; };
     btnRestart.onclick = function() {
+        stopMusic();
         location.reload();
     };
     divMensaje.appendChild(btnRestart);
