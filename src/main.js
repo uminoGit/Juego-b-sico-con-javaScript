@@ -208,45 +208,100 @@ function showGameOver() {
     document.body.appendChild(divMensaje);
 }
 
+let pauseMenuOpen = false;
+// Nueva variable global para controlar el estado del menú de pausa
+
 function showPauseMenu() {
     if (document.getElementById('divPause')) return; // Evita duplicados
+    pauseMenuOpen = true;
     let divEmergente = document.createElement("div");
     divEmergente.setAttribute('id', 'divPause');
     divEmergente.setAttribute('class','cubierta-emergente');
     divEmergente.style.position = 'fixed';
     divEmergente.style.top = '0';
     divEmergente.style.left = '0';
+    divEmergente.style.width = '100vw';
+    divEmergente.style.height = '100vh';
+    divEmergente.style.background = 'rgba(20, 24, 40, 0.85)';
+    divEmergente.style.zIndex = '1000';
     document.body.appendChild(divEmergente);
 
     let divMensaje = document.createElement('div');
     divMensaje.setAttribute('class', 'mensaje-emergente');
+    divMensaje.style.position = 'fixed';
+    divMensaje.style.top = '50%';
+    divMensaje.style.left = '50%';
     divMensaje.style.transform = 'translate(-50%, -50%)';
-    divMensaje.innerHTML = `<div style="margin-bottom: 30px;">Juego en pausa</div>`;
+    divMensaje.style.background = 'linear-gradient(135deg, #23243a 80%, #2e3a5a 100%)';
+    divMensaje.style.borderRadius = '22px';
+    divMensaje.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.37)';
+    divMensaje.style.padding = '40px 36px 32px 36px';
+    divMensaje.style.textAlign = 'center';
+    divMensaje.style.color = '#fff';
+    divMensaje.style.minWidth = '320px';
+    divMensaje.style.border = '2px solid #3a4a7a';
+    divMensaje.style.zIndex = '1001';
+    divMensaje.innerHTML = `<div style="margin-bottom: 32px; font-size:1.6em; font-weight:600; letter-spacing:1px;">⏸️ Juego en pausa</div>`;
+    // Botón Reanudar
     let btn = document.createElement('button');
-    btn.textContent = 'Reanudar';
-    btn.style.fontSize = '1.2em';
-    btn.style.padding = '10px 30px';
-    btn.style.borderRadius = '12px';
+    btn.textContent = '▶ Reanudar';
+    btn.style.fontSize = '1.15em';
+    btn.style.padding = '12px 32px';
+    btn.style.borderRadius = '14px';
     btn.style.border = 'none';
-    btn.style.background = '#105ce1';
+    btn.style.background = 'linear-gradient(90deg, #105ce1 60%, #1e90ff 100%)';
     btn.style.color = '#fff';
     btn.style.cursor = 'pointer';
+    btn.style.margin = '0 10px';
+    btn.style.boxShadow = '0 2px 8px rgba(16,92,225,0.15)';
+    btn.onmouseover = function() { btn.style.background = '#1e90ff'; };
+    btn.onmouseleave = function() { btn.style.background = 'linear-gradient(90deg, #105ce1 60%, #1e90ff 100%)'; };
     btn.onclick = function() {
         paused = false;
+        pauseMenuOpen = false;
         document.body.removeChild(divEmergente);
-        document.body.removeChild(divMensaje);
+        // divMensaje ya es hijo de divEmergente, se elimina junto con él
         requestAnimationFrame(gameLoop); // Ahora gameLoop es global
     };
     divMensaje.appendChild(btn);
-    document.body.appendChild(divMensaje);
+    // Botón Reiniciar (refresca la pantalla)
+    let btnRestart = document.createElement('button');
+    btnRestart.textContent = '🔄 Reiniciar';
+    btnRestart.style.fontSize = '1.15em';
+    btnRestart.style.padding = '12px 32px';
+    btnRestart.style.borderRadius = '14px';
+    btnRestart.style.border = 'none';
+    btnRestart.style.background = 'linear-gradient(90deg, #e11010 60%, #ff4d4d 100%)';
+    btnRestart.style.color = '#fff';
+    btnRestart.style.cursor = 'pointer';
+    btnRestart.style.margin = '0 10px';
+    btnRestart.style.boxShadow = '0 2px 8px rgba(225,16,16,0.15)';
+    btnRestart.onmouseover = function() { btnRestart.style.background = '#ff4d4d'; };
+    btnRestart.onmouseleave = function() { btnRestart.style.background = 'linear-gradient(90deg, #e11010 60%, #ff4d4d 100%)'; };
+    btnRestart.onclick = function() {
+        location.reload();
+    };
+    divMensaje.appendChild(btnRestart);
+    divEmergente.appendChild(divMensaje); // <--- Cambia aquí: el mensaje es hijo de la cubierta
 }
 
 // Manejo de eventos de teclado
+// Ahora Escape alterna pausa/reanudar
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Escape' && !gameOver) {
-        if (!paused) {
+        if (!paused && !pauseMenuOpen) {
             paused = true;
+            pauseMenuOpen = true;
             showPauseMenu();
+        } else if (paused && pauseMenuOpen) {
+            // Si el menú de pausa está abierto, cerrar y reanudar
+            paused = false;
+            pauseMenuOpen = false;
+            const divEmergente = document.getElementById('divPause');
+            const divMensaje = document.querySelector('.mensaje-emergente');
+            if (divEmergente) document.body.removeChild(divEmergente);
+            if (divMensaje) document.body.removeChild(divMensaje);
+            requestAnimationFrame(gameLoop);
         }
     }
 });
