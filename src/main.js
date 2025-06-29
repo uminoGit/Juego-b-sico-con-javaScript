@@ -48,6 +48,24 @@ let lives = 5; // Vidas del jugador
 let invulnerable = false; // Estado de invulnerabilidad tras colisión
 let paused = false; // Estado de pausa
 
+// --- Sonido de colisión ---
+let collisionSound = null;
+function ensureCollisionSound() {
+    if (!collisionSound) {
+        collisionSound = document.createElement('audio');
+        collisionSound.src = 'assets/sounds/undertale-sound-effect-attack-hit.mp3';
+        collisionSound.volume = 0.7;
+        collisionSound.style.display = 'none';
+        document.body.appendChild(collisionSound);
+    }
+    return collisionSound;
+}
+function playCollisionSound() {
+    const audio = ensureCollisionSound();
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+}
+
 let blinkInterval = null; // Para controlar el parpadeo
 let blinkTimeout = null;
 
@@ -69,6 +87,7 @@ function gameLoop() {
     }
     // Colisión
     if (!invulnerable && checkCollision(player, obstacleManager.obstacles)) {
+        playCollisionSound();
         lives--;
         updateScore();
         if (lives <= 0) {
