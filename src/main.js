@@ -157,7 +157,7 @@ function updateScore() {
 // 5. Cargar la textura y crear los objetos principales cuando esté lista
 const playerTexture = textureLoader.load(
     'assets/textures/nave.jpeg',
-    () => {
+    function() {
         // Solo define la función para iniciar el juego, no la ejecutes automáticamente
         window.iniciarJuego = function() {
             player = new Player(scene, playerTexture); // Crear jugador
