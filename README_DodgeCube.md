@@ -2,13 +2,7 @@
 
 Juego de evasión en 3D desarrollado con Three.js y JavaScript vanilla. Controlas una nave que debe esquivar obstáculos que caen desde la parte superior de la pantalla, con dificultad progresiva y múltiples tipos de enemigos.
 
-🎮 **[Jugar ahora](#)** ← *(agrega tu link de GitHub Pages aquí)*
-
----
-
-## 🖼️ Screenshot
-
-![DodgeCube gameplay](screenshots/gameplay.png)
+🎮 **[Jugar ahora](#)**
 
 ---
 
